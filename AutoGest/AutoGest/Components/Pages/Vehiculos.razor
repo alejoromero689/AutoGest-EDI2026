@@ -183,18 +183,20 @@
                 .Include(v => v.Marca)
                 .AsQueryable();
 
+
             if (!string.IsNullOrWhiteSpace(busqueda))
             {
                 string texto = busqueda.Trim();
-                string patenteBuscada = texto.ToUpperInvariant();
+                string prefijoPatente = texto.ToUpperInvariant();
 
                 consulta = consulta.Where(v =>
                     v.Modelo.Contains(texto) ||
                     (v.Marca != null &&
                      v.Marca.Nombre.Contains(texto)) ||
                     (v.Patente != null &&
-                     v.Patente.StartsWith(patenteBuscada)));
+                     v.Patente.StartsWith(prefijoPatente)));
             }
+
 
 
             totalRegistros = await consulta.CountAsync();

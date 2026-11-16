@@ -7,6 +7,7 @@
 @using Microsoft.EntityFrameworkCore
 @using System.Text.RegularExpressions
 @using AutoGest.Services
+@using AutoGest.Components.Shared
 
 
 @inject IDbContextFactory<GestoriaDbContext> DbFactory
@@ -111,19 +112,19 @@
 
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">
-                                Precio
-                            </label>
+    <label class="form-label" for="precio">
+        Precio
+    </label>
 
-                            <input type="text"
-                                   inputmode="decimal"
-                                   class="form-control"
-                                   @bind="PrecioTexto"
-                                   @bind:event="oninput"
-                                   @onblur="FormatearPrecio" />
+                            <InputNumber id="precio"
+                                         class="form-control"
+                                         @bind-Value="vehiculo.Precio"
+                                         step="0.01" />
 
-                            <ValidationMessage For="@(() => vehiculo.Precio)" />
-                        </div>
+    <ValidationMessage
+        For="@(() => vehiculo.Precio)" />
+</div>
+
 
 
                         <div class="col-12">

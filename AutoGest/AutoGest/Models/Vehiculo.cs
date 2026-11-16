@@ -6,16 +6,15 @@ public class Vehiculo : IValidatableObject
 {
     public int Id { get; set; }
 
+
     [Required(ErrorMessage = "Ingresá el modelo.")]
-    [StringLength(
-    80,
-    MinimumLength = 2,
-    ErrorMessage = "El modelo debe tener entre 2 y 80 caracteres.")]
+    [StringLength(80, MinimumLength = 2,
+        ErrorMessage = "El modelo debe tener entre 2 y 80 caracteres.")]
     [RegularExpression(
-    @"^[\p{L}\p{N}]+(?: [\p{L}\p{N}]+)*$",
-    ErrorMessage =
-        "El modelo solo puede contener letras, números y espacios internos.")]
-    public string Modelo { get; set; } = "";
+        @"^[\p{L}\p{N}]+(?: [\p{L}\p{N}]+)*$",
+        ErrorMessage = "El modelo solo puede contener letras, números y espacios entre palabras.")]
+    public string Modelo { get; set; } = string.Empty;
+
 
 
     [Range(1900, 2100)]
