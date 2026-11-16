@@ -1,0 +1,105 @@
+﻿@using AutoGest.Models
+@using System.Globalization
+
+<div class="table-responsive">
+
+    <table class="table table-striped table-hover align-middle">
+
+        <thead>
+            <tr>
+                <th>Marca</th>
+                <th>Modelo</th>
+                <th>Año</th>
+                <th>Condición</th>
+                <th>Kilometraje</th>
+                <th>Patente</th>
+                <th>Precio</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @if (Vehiculos.Count == 0)
+            {
+                <tr>
+                    <td colspan="8"
+                        class="text-center text-muted py-4">
+                        No se encontraron vehículos.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var vehiculo in Vehiculos)
+                {
+                    <tr>
+                        <td>@(vehiculo.Marca?.Nombre ?? "Sin marca")</td>
+
+                        <td>@vehiculo.Modelo</td>
+
+                        <td>@vehiculo.Anio</td>
+
+                        <td>
+                            @if (vehiculo.EsUsado)
+                            {
+                                <span class="badge bg-secondary">
+                                    Usado
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">
+                                    Nuevo
+                                </span>
+                            }
+                        </td>
+
+                        <td>
+                            @vehiculo.Kilometraje.ToString("N0") km
+                        </td>
+
+                        <td>@(vehiculo.Patente ?? "Sin patente")</td>
+
+                        <td>
+                            $ @vehiculo.Precio.ToString("N2", CulturaArgentina)
+                        </td>
+
+                        <td>
+                            <div class="d-flex gap-2">
+
+                                <a class="btn btn-warning btn-sm"
+                                   href="@($"/vehiculos/editar/{vehiculo.Id}")">
+                                    Editar
+                                </a>
+
+                                <button type="button"
+                                        class="btn btn-danger btn-sm"
+                                        @onclick="() => EliminarVehiculo.InvokeAsync(vehiculo)">
+                                    Eliminar
+                                </button>
+
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+
+        </tbody>
+
+    </table>
+
+</div>
+
+@code {
+
+    private static readonly CultureInfo CulturaArgentina =
+        CultureInfo.GetCultureInfo("es-AR");
+
+    [Parameter]
+    public IReadOnlyList<Vehiculo> Vehiculos { get; set; }
+        = Array.Empty<Vehiculo>();
+
+    [Parameter]
+    public EventCallback<Vehiculo> EliminarVehiculo { get; set; }
+}

@@ -1,0 +1,409 @@
+﻿@page "/vehiculos/nuevo"
+@page "/vehiculos/editar/{Id:int}"
+
+@using AutoGest.Data
+@using AutoGest.Models
+@using System.Globalization
+@using Microsoft.EntityFrameworkCore
+@using System.Text.RegularExpressions
+@using AutoGest.Services
+
+
+@inject IDbContextFactory<GestoriaDbContext> DbFactory
+@inject NavigationManager Navigation
+@inject VehiculosState VehiculosState
+
+
+<PageTitle>
+    @(Id.HasValue ? "Editar vehículo - AutoGest" : "Registrar vehículo - AutoGest")
+</PageTitle>
+
+<main class="container py-4">
+
+    <header class="mb-4">
+        <h1>@(Id.HasValue ? "Editar vehículo" : "Registrar vehículo")</h1>
+        <p class="text-muted">
+            Ingresá los datos del automóvil.
+        </p>
+    </header>
+
+    <section class="card shadow-sm">
+
+        <div class="card-body">
+
+            @if (cargando)
+            {
+                <p>Cargando marcas...</p>
+            }
+            else if (errorCarga is not null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @errorCarga
+                </div>
+            }
+            else
+            {
+                <EditForm Model="@vehiculo"
+                          OnValidSubmit="GuardarVehiculo"
+                          FormName="NuevoVehiculo">
+
+                    <DataAnnotationsValidator />
+
+                    <ValidationSummary class="text-danger" />
+
+                    @if (errorGuardado is not null)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @errorGuardado
+                        </div>
+                    }
+
+                    <div class="row g-3">
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">
+                                Marca
+                            </label>
+
+                            <InputSelect class="form-select"
+                                         @bind-Value="vehiculo.MarcaId">
+
+                                <option value="0">
+                                    Seleccioná una marca
+                                </option>
+
+                                @foreach (var marca in marcas)
+                                {
+                                    <option value="@marca.Id">
+                                        @marca.Nombre
+                                    </option>
+                                }
+
+                            </InputSelect>
+
+                            <ValidationMessage
+                                For="@(() => vehiculo.MarcaId)" />
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">
+                                Modelo
+                            </label>
+
+                            <InputText class="form-control"
+                                       @bind-Value="vehiculo.Modelo" />
+
+                            <ValidationMessage
+                                For="@(() => vehiculo.Modelo)" />
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">
+                                Año
+                            </label>
+
+                            <InputNumber class="form-control"
+                                         @bind-Value="vehiculo.Anio" />
+
+                            <ValidationMessage
+                                For="@(() => vehiculo.Anio)" />
+                        </div>
+
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">
+                                Precio
+                            </label>
+
+                            <input type="text"
+                                   inputmode="decimal"
+                                   class="form-control"
+                                   @bind="PrecioTexto"
+                                   @bind:event="oninput"
+                                   @onblur="FormatearPrecio" />
+
+                            <ValidationMessage For="@(() => vehiculo.Precio)" />
+                        </div>
+
+
+                        <div class="col-12">
+
+                            <div class="form-check">
+
+                                <InputCheckbox
+                                    class="form-check-input"
+                                    @bind-Value="vehiculo.EsUsado" />
+
+                                <label class="form-check-label">
+                                    ¿Es un vehículo usado?
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">
+                                Kilometraje
+                            </label>
+
+                            <InputNumber class="form-control"
+                                         @bind-Value="vehiculo.Kilometraje" />
+
+                            <ValidationMessage
+                                For="@(() => vehiculo.Kilometraje)" />
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">
+                                Patente
+                            </label>
+
+                            <InputText class="form-control"
+                                       @bind-Value="vehiculo.Patente" />
+
+                            <ValidationMessage
+                                For="@(() => vehiculo.Patente)" />
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+
+                        <button type="submit"
+                                class="btn btn-success"
+                                disabled="@guardando">
+                            @(guardando ? "Guardando..." : (Id.HasValue ? "Guardar cambios" : "Guardar vehículo"))
+                        </button>
+
+                        <button type="button"
+                                class="btn btn-secondary"
+                                @onclick="Volver">
+                            Cancelar
+                        </button>
+
+                    </div>
+
+                </EditForm>
+            }
+
+        </div>
+
+    </section>
+
+</main>
+
+@code {
+
+
+    [Parameter]
+    public int? Id { get; set; }
+
+
+    private Vehiculo vehiculo = new();
+
+    private readonly CultureInfo culturaArgentina =
+        CultureInfo.GetCultureInfo("es-AR");
+
+    private string precioTexto = "0,00";
+
+    private string PrecioTexto
+    {
+        get => precioTexto;
+
+        set
+        {
+            precioTexto = value;
+
+            if (decimal.TryParse(value,
+                NumberStyles.Number,
+                culturaArgentina,
+                out decimal precio))
+            {
+                vehiculo.Precio = precio;
+            }
+            else
+            {
+                vehiculo.Precio = 0m;
+            }
+        }
+    }
+
+    private void FormatearPrecio()
+    {
+        if (decimal.TryParse(precioTexto,
+            NumberStyles.Number,
+            culturaArgentina,
+            out decimal precio))
+        {
+            vehiculo.Precio = precio;
+
+            precioTexto = precio.ToString(
+                "N2", culturaArgentina);
+        }
+    }
+
+
+    private List<Marca> marcas = new();
+
+    private bool cargando = true;
+    private bool guardando = false;
+
+    private string? errorCarga;
+    private string? errorGuardado;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        cargando = true;
+        errorCarga = null;
+        errorGuardado = null;
+
+        try
+        {
+            await using var db =
+                await DbFactory.CreateDbContextAsync();
+
+            marcas = await db.Marcas
+                .AsNoTracking()
+                .OrderBy(m => m.Nombre)
+                .ToListAsync();
+
+            if (Id.HasValue)
+            {
+                var encontrado = await db.Vehiculos
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(v => v.Id == Id.Value);
+
+                if (encontrado is null)
+                {
+                    errorCarga = "El vehículo no existe.";
+                    return;
+                }
+
+                vehiculo = encontrado;
+            }
+            else
+            {
+                vehiculo = new Vehiculo();
+            }
+
+            precioTexto = vehiculo.Precio.ToString(
+                "N2", culturaArgentina);
+        }
+        catch
+        {
+            errorCarga = "No se pudieron cargar los datos.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+
+    private async Task GuardarVehiculo()
+    {
+        if (guardando)
+            return;
+
+        guardando = true;
+        errorGuardado = null;
+
+        try
+        {
+            await using var db =
+                await DbFactory.CreateDbContextAsync();
+
+            vehiculo.Modelo = Regex.Replace(vehiculo.Modelo.Trim(),@"\s+"," ");
+
+
+            vehiculo.Patente =
+                string.IsNullOrWhiteSpace(vehiculo.Patente)
+                ? null
+                : vehiculo.Patente.Trim().ToUpperInvariant();
+
+            bool existeMarca = await db.Marcas
+                .AnyAsync(m => m.Id == vehiculo.MarcaId);
+
+            if (!existeMarca)
+            {
+                errorGuardado =
+                    "La marca seleccionada no existe.";
+                return;
+            }
+
+            if (vehiculo.Patente != null)
+            {
+                bool patenteRepetida = await db.Vehiculos
+                    .AnyAsync(v =>
+                        v.Patente == vehiculo.Patente &&
+                        v.Id != vehiculo.Id);
+
+                if (patenteRepetida)
+                {
+                    errorGuardado =
+                        "Ya existe otro vehículo con esa patente.";
+                    return;
+                }
+            }
+
+            if (Id.HasValue)
+            {
+                // EDITAR un vehículo existente
+
+                var existente = await db.Vehiculos
+                    .FindAsync(Id.Value);
+
+                if (existente is null)
+                {
+                    errorGuardado =
+                        "El vehículo ya no existe.";
+                    return;
+                }
+
+                existente.MarcaId = vehiculo.MarcaId;
+                existente.Modelo = vehiculo.Modelo;
+                existente.Anio = vehiculo.Anio;
+                existente.Precio = vehiculo.Precio;
+                existente.EsUsado = vehiculo.EsUsado;
+                existente.Kilometraje = vehiculo.Kilometraje;
+                existente.Patente = vehiculo.Patente;
+            }
+            else
+            {
+                // AGREGAR un vehículo nuevo
+
+                db.Vehiculos.Add(vehiculo);
+            }
+
+            await db.SaveChangesAsync();
+
+            VehiculosState.NotificarCambio();
+
+            Navigation.NavigateTo("/vehiculos");
+
+        }
+        catch (DbUpdateException)
+        {
+            errorGuardado =
+                "No se pudo guardar. Verificá que la patente no esté repetida.";
+        }
+        catch
+        {
+            errorGuardado =
+                "Ocurrió un error al guardar el vehículo.";
+        }
+        finally
+        {
+            guardando = false;
+        }
+
+    }
+
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/vehiculos");
+    }
+}

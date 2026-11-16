@@ -1,0 +1,53 @@
+﻿@using System.Globalization
+@inherits InputBase<decimal>
+
+<input type="text"
+       class="@CssClass"
+       inputmode="decimal"
+       value="@CurrentValueAsString"
+       @onchange="CambiarValor"
+       @onblur="Formatear"
+       placeholder="0,00" />
+
+@code {
+    private static readonly CultureInfo Cultura =
+        CultureInfo.GetCultureInfo("es-AR");
+
+    protected override string FormatValueAsString(decimal value)
+    {
+        return value.ToString("N2", Cultura);
+    }
+
+    protected override bool TryParseValueFromString(
+        string? value,
+        out decimal result,
+        out string validationErrorMessage)
+    {
+        if (decimal.TryParse(
+            value,
+            NumberStyles.Number,
+            Cultura,
+            out result))
+        {
+            validationErrorMessage = "";
+            return true;
+        }
+
+        result = default;
+        validationErrorMessage =
+            "Ingresá un precio válido. Ejemplo: 250000,00.";
+
+        return false;
+    }
+
+    private void CambiarValor(ChangeEventArgs e)
+    {
+        CurrentValueAsString = e.Value?.ToString();
+    }
+
+    private void Formatear()
+    {
+        CurrentValueAsString =
+            CurrentValue.ToString("N2", Cultura);
+    }
+}

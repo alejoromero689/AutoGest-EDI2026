@@ -1,0 +1,293 @@
+﻿@page "/vehiculos"
+
+@using AutoGest.Data
+@using AutoGest.Models
+@using AutoGest.Components.Shared
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.JSInterop
+@using AutoGest.Services
+
+@implements IDisposable
+@inject VehiculosState VehiculosState
+@inject IDbContextFactory<GestoriaDbContext> DbFactory
+@inject IJSRuntime JS
+
+<PageTitle>Vehículos - AutoGest</PageTitle>
+
+<main class="container py-4">
+
+    <header class="mb-4">
+
+        <div class="d-flex flex-column flex-sm-row
+                    justify-content-between align-items-sm-center gap-3">
+
+            <div>
+                <h1>Inventario de vehículos</h1>
+
+                <p class="text-muted">
+                    Administración de vehículos nuevos y usados.
+                </p>
+            </div>
+
+            <a href="/vehiculos/nuevo"
+               class="btn btn-primary">
+                + Nuevo vehículo
+            </a>
+
+        </div>
+
+    </header>
+
+    <section aria-label="Inventario">
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+
+                <h2 class="h5 mb-3">
+                    Vehículos registrados
+                </h2>
+
+                <form class="row g-2 mb-4"
+                      @onsubmit="Buscar"
+                      @onsubmit:preventDefault>
+
+                    <div class="col-12 col-md-9">
+
+                        <input type="search"
+                               class="form-control"
+                               placeholder="Buscar marca, modelo o patente"
+                               aria-label="Buscar vehículos"
+                               @bind="busqueda"
+                               @bind:event="oninput" />
+
+                    </div>
+
+                    <div class="col-12 col-md-3">
+
+                        <button type="submit"
+                                class="btn btn-primary w-100">
+                            Buscar
+                        </button>
+
+                    </div>
+                </form>
+
+                @if (mensajeError is not null)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @mensajeError
+                    </div>
+                }
+
+                @if (cargando)
+                {
+                    <p>Cargando vehículos...</p>
+                }
+                else
+                {
+                    <VehiculoTabla Vehiculos="vehiculos"
+                                   EliminarVehiculo="Eliminar" />
+                }
+
+                <footer class="d-flex flex-column flex-sm-row
+                               justify-content-between
+                               align-items-center gap-2 mt-3">
+
+                    <span class="text-muted">
+                        Total: @totalRegistros vehículos
+                    </span>
+
+                    <nav aria-label="Paginación"
+                         class="d-flex align-items-center gap-2">
+
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm"
+                                disabled="@(paginaActual <= 1)"
+                                @onclick="PaginaAnterior">
+                            Anterior
+                        </button>
+
+                        <span>
+                            Página @paginaActual de @totalPaginas
+                        </span>
+
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm"
+                                disabled="@(paginaActual >= totalPaginas)"
+                                @onclick="PaginaSiguiente">
+                            Siguiente
+                        </button>
+
+                    </nav>
+
+                </footer>
+
+            </div>
+        </div>
+
+    </section>
+
+</main>
+
+@code {
+
+    private List<Vehiculo> vehiculos = new();
+
+    private string busqueda = "";
+
+    private bool cargando = true;
+
+    private string? mensajeError;
+
+    private int paginaActual = 1;
+
+    private const int TamanoPagina = 5;
+
+    private int totalRegistros;
+
+    private int totalPaginas = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        VehiculosState.OnChange += EstadoCambio;
+        await CargarVehiculos();
+    }
+
+    private void EstadoCambio()
+    {
+        _ = InvokeAsync(async () =>
+        {
+            await CargarVehiculos();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        VehiculosState.OnChange -= EstadoCambio;
+    }
+
+
+    private async Task CargarVehiculos()
+    {
+        cargando = true;
+        mensajeError = null;
+
+        try
+        {
+            await using var db =
+                await DbFactory.CreateDbContextAsync();
+
+            var consulta = db.Vehiculos
+                .AsNoTracking()
+                .Include(v => v.Marca)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(busqueda))
+            {
+                string texto = busqueda.Trim();
+                string patenteBuscada = texto.ToUpperInvariant();
+
+                consulta = consulta.Where(v =>
+                    v.Modelo.Contains(texto) ||
+                    (v.Marca != null &&
+                     v.Marca.Nombre.Contains(texto)) ||
+                    (v.Patente != null &&
+                     v.Patente.StartsWith(patenteBuscada)));
+            }
+
+
+            totalRegistros = await consulta.CountAsync();
+
+            totalPaginas = Math.Max(
+                1,
+                (int)Math.Ceiling(
+                    totalRegistros / (double)TamanoPagina));
+
+            if (paginaActual > totalPaginas)
+                paginaActual = totalPaginas;
+
+            vehiculos = await consulta
+                .OrderBy(v => v.Id)
+                .Skip((paginaActual - 1) * TamanoPagina)
+                .Take(TamanoPagina)
+                .ToListAsync();
+        }
+        catch
+        {
+            mensajeError =
+                "No se pudieron cargar los vehículos.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task Buscar()
+    {
+        paginaActual = 1;
+        await CargarVehiculos();
+    }
+
+    private async Task PaginaAnterior()
+    {
+        if (paginaActual <= 1)
+            return;
+
+        paginaActual--;
+        await CargarVehiculos();
+    }
+
+    private async Task PaginaSiguiente()
+    {
+        if (paginaActual >= totalPaginas)
+            return;
+
+        paginaActual++;
+        await CargarVehiculos();
+    }
+
+    private async Task Eliminar(Vehiculo vehiculo)
+    {
+        bool confirmado = await JS.InvokeAsync<bool>(
+            "confirm",
+            $"¿Seguro que querés eliminar el vehículo {vehiculo.Marca?.Nombre} {vehiculo.Modelo}?"
+        );
+
+        if (!confirmado)
+            return;
+
+        try
+        {
+            await using var db =
+                await DbFactory.CreateDbContextAsync();
+
+            var existente =
+                await db.Vehiculos.FindAsync(vehiculo.Id);
+
+            if (existente is null)
+            {
+                mensajeError = "El vehículo ya no existe.";
+                await CargarVehiculos();
+                return;
+            }
+
+            db.Vehiculos.Remove(existente);
+
+            await db.SaveChangesAsync();
+
+            await CargarVehiculos();
+        }
+        catch (DbUpdateException)
+        {
+            mensajeError =
+                "No se pudo eliminar el vehículo. Puede tener registros relacionados.";
+        }
+        catch
+        {
+            mensajeError =
+                "Ocurrió un error al eliminar el vehículo.";
+        }
+    }
+}
