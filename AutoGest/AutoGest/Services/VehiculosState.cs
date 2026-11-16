@@ -1,11 +1,3 @@
-﻿namespace AutoGest.Services;
+namespace AutoGest.Services;
 
-public class VehiculosState
-{
-    public event Action? OnChange;
-
-    public void NotificarCambio()
-    {
-        OnChange?.Invoke();
-    }
-}
+public class VehiculosState : GestionState { }

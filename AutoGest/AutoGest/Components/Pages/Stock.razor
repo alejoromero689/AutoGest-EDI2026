@@ -1,0 +1,26 @@
+@page "/stock"
+@inherits DatosPageBase
+@inject IJSRuntime JS
+<PageTitle>Stock · AutoGest</PageTitle>
+<PageHeader Titulo="Stock" Descripcion="Disponibilidad, costos y precios de cada unidad, siempre al día."><button class="btn btn-light" disabled="@(Cargando || pagina.Items.Count == 0)" @onclick="Exportar"><Icono Nombre="descargar" /> Exportar página CSV</button><a href="/vehiculos/nuevo" class="btn btn-primary"><Icono Nombre="mas" /> Nuevo vehículo</a></PageHeader>
+@if (resumen != null) { <section class="row g-3 mb-4" aria-label="Resumen de stock"><div class="col-12 col-md-4"><MetricCard Titulo="Disponibles" Valor="@resumen.Disponibles.ToString()" Detalle="Unidades en inventario" Icono="stock" Color="featured" /></div><div class="col-12 col-md-4"><MetricCard Titulo="Vendidos" Valor="@resumen.Vendidos.ToString()" Detalle="Unidades con venta registrada" Icono="ventas" /></div><div class="col-12 col-md-4"><MetricCard Titulo="Valor de venta del stock" Valor="@resumen.ValorStock.ToString("C0", Formato.Cultura)" Detalle="Suma de precios de unidades disponibles" Icono="dinero" /></div></section> }
+<section class="panel" aria-label="Inventario de unidades">
+    <div class="section-heading"><h2>Inventario de unidades</h2><span>1 vehículo = 1 unidad</span></div>
+    <Buscador @bind-Texto="texto" Buscar="Buscar" Placeholder="Buscar marca, modelo o patente" Deshabilitado="Cargando"><select class="form-select stock-filter" aria-label="Filtrar stock por estado" @bind="filtro" @bind:after="Buscar"><option value="">Todos los estados</option><option value="disponible">Disponibles</option><option value="vendido">Vendidos</option></select></Buscador>
+    @if (Error != null) { <div class="alert alert-danger" role="alert">@Error</div> }
+    @if (Cargando) { <p role="status">Cargando stock...</p> }
+    else if (pagina.Items.Count == 0) { <EstadoVacio Titulo="No se encontraron vehículos" Descripcion="Registrá un vehículo o modificá los filtros de búsqueda." /> }
+    else { <div class="table-responsive"><table class="table align-middle"><caption class="visually-hidden">Stock de vehículos</caption><thead><tr><th scope="col">Vehículo</th><th scope="col">Patente</th><th scope="col">Estado</th><th scope="col" class="text-end">Costo de compra</th><th scope="col" class="text-end">Precio de catálogo</th><th scope="col" class="text-end">Acciones</th></tr></thead><tbody>@foreach (var v in pagina.Items) { <tr @key="v.Id"><td><strong>@v.Marca @v.Modelo</strong><div class="small text-muted">@v.Anio · Unidad #@v.Id</div></td><td class="font-monospace">@(v.Patente ?? "Sin patente")</td><td><EstadoBadge Vendido="v.Vendido" />@if (v.FechaVenta != null) { <div class="small text-muted mt-1">@v.FechaVenta.Value.ToString("dd/MM/yyyy")</div> }</td><td class="text-end text-nowrap">@(v.Costo?.ToString("C2", Formato.Cultura) ?? "Sin registrar")</td><td class="text-end text-nowrap fw-semibold">@v.Precio.ToString("C2", Formato.Cultura)</td><td><div class="table-actions"><a class="btn btn-light btn-sm" href="@($"/vehiculos/editar/{v.Id}")">Ver / editar</a>@if (!v.Vendido) { <a class="btn btn-outline-primary btn-sm" href="@($"/ventas/nueva?vehiculo={v.Id}")">Vender</a> }</div></td></tr> }</tbody></table></div> }
+    <Paginacion Total="pagina.Total" Numero="pagina.Numero" Paginas="pagina.Paginas" Cambiar="Cambiar" Deshabilitado="Cargando" />
+    <p class="small text-muted mt-3 mb-0">Los vehículos del catálogo ingresan como disponibles. Las compras registran su costo y las ventas actualizan su disponibilidad.</p>
+</section>
+@code {
+    private string texto = "", filtro = "";
+    private int numero = 1;
+    private Pagina<StockFila> pagina = new([], 0, 1);
+    private Resumen? resumen;
+    protected override async Task CargarAsync() { resumen = await Gestion.ResumenAsync(); pagina = await Gestion.StockAsync(texto, filtro, numero); numero = pagina.Numero; }
+    private Task Buscar() { numero = 1; return Recargar(); }
+    private Task Cambiar(int valor) { numero = valor; return Recargar(); }
+    private Task Exportar() => Ejecutar(async () => { await JS.InvokeVoidAsync("autogest.descargarCsv", $"stock-pagina-{pagina.Numero}.csv", pagina.Items.Select(v => new string[] { v.Id.ToString(), v.Marca, v.Modelo, v.Anio.ToString(), v.Patente ?? "", v.Vendido ? "Vendido" : "Disponible", v.Costo?.ToString("F2", Formato.Cultura) ?? "", v.Precio.ToString("F2", Formato.Cultura) }).Prepend(["Unidad", "Marca", "Modelo", "Año", "Patente", "Estado", "Costo ARS", "Precio ARS"]).ToArray()); });
+}

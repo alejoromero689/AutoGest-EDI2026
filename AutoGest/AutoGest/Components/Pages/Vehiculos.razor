@@ -1,4 +1,4 @@
-﻿@page "/vehiculos"
+@page "/vehiculos"
 
 @using AutoGest.Data
 @using AutoGest.Models
@@ -14,29 +14,11 @@
 
 <PageTitle>Vehículos - AutoGest</PageTitle>
 
-<main class="container py-4">
+<div class="vehicle-page">
 
-    <header class="mb-4">
-
-        <div class="d-flex flex-column flex-sm-row
-                    justify-content-between align-items-sm-center gap-3">
-
-            <div>
-                <h1>Inventario de vehículos</h1>
-
-                <p class="text-muted">
-                    Administración de vehículos nuevos y usados.
-                </p>
-            </div>
-
-            <a href="/vehiculos/nuevo"
-               class="btn btn-primary">
-                + Nuevo vehículo
-            </a>
-
-        </div>
-
-    </header>
+    <PageHeader Titulo="Vehículos" Descripcion="Tu catálogo de vehículos nuevos y usados.">
+        <a class="btn btn-primary" href="/vehiculos/nuevo"><Icono Nombre="mas" /> Nuevo vehículo</a>
+    </PageHeader>
 
     <section aria-label="Inventario">
 
@@ -127,7 +109,7 @@
 
     </section>
 
-</main>
+</div>
 
 @code {
 
@@ -278,8 +260,7 @@
             db.Vehiculos.Remove(existente);
 
             await db.SaveChangesAsync();
-
-            await CargarVehiculos();
+            VehiculosState.NotificarCambio("Vehículo eliminado correctamente.");
         }
         catch (DbUpdateException)
         {

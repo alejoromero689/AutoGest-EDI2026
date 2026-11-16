@@ -1,0 +1,28 @@
+@page "/ventas"
+@page "/compras"
+@inherits DatosPageBase
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+<PageTitle>@Titulo · AutoGest</PageTitle>
+<PageHeader Titulo="@Titulo" Descripcion="@(EsVenta ? "Cada venta registrada, cada unidad bajo control." : "Registrá la adquisición y el costo de tus vehículos.")"><a class="btn btn-primary" href="@($"/{Ruta}/nueva")"><Icono Nombre="mas" /> @(EsVenta ? "Nueva venta" : "Nueva compra")</a></PageHeader>
+<section class="panel" aria-label="@Titulo">
+    <div class="section-heading"><h2>Historial de @Titulo.ToLowerInvariant()</h2><span>Operaciones registradas</span></div>
+    <Buscador @bind-Texto="texto" Buscar="Buscar" Placeholder="Buscar por vehículo, patente o contacto" Deshabilitado="Cargando" />
+    @if (Error != null) { <div class="alert alert-danger" role="alert">@Error</div> }
+    @if (Cargando) { <p role="status">Cargando operaciones...</p> }
+    else { <OperacionTabla Operaciones="pagina.Items" EsVenta="EsVenta" Eliminar="Eliminar" Deshabilitado="Guardando" /> }
+    <Paginacion Total="pagina.Total" Numero="pagina.Numero" Paginas="pagina.Paginas" Cambiar="Cambiar" Deshabilitado="Cargando" />
+</section>
+@code {
+    private bool EsVenta => new Uri(Navigation.Uri).AbsolutePath.StartsWith("/ventas", StringComparison.OrdinalIgnoreCase);
+    private string Titulo => EsVenta ? "Ventas" : "Compras";
+    private string Ruta => EsVenta ? "ventas" : "compras";
+    private string? ultimaRuta;
+    private string texto = "";
+    private int numero = 1;
+    private Pagina<OperacionFila> pagina = new([], 0, 1);
+    protected override async Task CargarAsync() { if (ultimaRuta != Ruta) { texto = ""; numero = 1; ultimaRuta = Ruta; } pagina = await Gestion.OperacionesAsync(EsVenta, texto, numero); numero = pagina.Numero; }
+    private Task Buscar() { numero = 1; return Recargar(); }
+    private Task Cambiar(int valor) { numero = valor; return Recargar(); }
+    private async Task Eliminar(OperacionFila item) { if (await JS.InvokeAsync<bool>("confirm", EsVenta ? "¿Eliminar esta venta? El vehículo volverá a estar disponible." : "¿Eliminar esta compra? El vehículo permanecerá en el inventario sin costo de adquisición.")) await Ejecutar(() => Gestion.EliminarOperacionAsync(EsVenta, item.Id)); }
+}

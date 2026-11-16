@@ -1,7 +1,34 @@
-﻿@page "/"
-
-<PageTitle>Home</PageTitle>
-
-<h1>Hello, world!</h1>
-
-Welcome to your new app.
+@page "/"
+@inherits DatosPageBase
+@inject IJSRuntime JS
+<PageTitle>Inicio · AutoGest</PageTitle>
+<PageHeader Titulo="Todo listo para un nuevo día." Descripcion="Una mirada a tu negocio, antes de ponerlo en marcha." Seccion="PANEL GENERAL">
+    <a href="/ventas/nueva" class="btn btn-primary"><Icono Nombre="mas" /> Registrar venta</a>
+</PageHeader>
+@if (Error != null) { <div class="alert alert-danger" role="alert">@Error</div> }
+@if (Cargando && resumen == null) { <p role="status">Cargando resumen...</p> }
+else if (resumen != null)
+{
+    <section class="row g-3 mb-4" aria-label="Resumen del negocio">
+        <div class="col-12 col-sm-6 col-xl-3"><MetricCard Titulo="Vehículos disponibles" Valor="@resumen.Disponibles.ToString()" Detalle="Unidades listas para vender" Icono="auto" Color="featured" /></div>
+        <div class="col-12 col-sm-6 col-xl-3"><MetricCard Titulo="Ventas del mes" Valor="@resumen.VentasMes.ToString("C0", Formato.Cultura)" Detalle="Importe total registrado" Icono="ventas" /></div>
+        <div class="col-12 col-sm-6 col-xl-3"><MetricCard Titulo="Compras del mes" Valor="@resumen.ComprasMes.ToString("C0", Formato.Cultura)" Detalle="Inversión en vehículos" Icono="compras" /></div>
+        <div class="col-12 col-sm-6 col-xl-3"><MetricCard Titulo="Clientes registrados" Valor="@resumen.Clientes.ToString()" Detalle="Tu red de clientes y proveedores" Icono="clientes" /></div>
+    </section>
+    <section class="welcome-banner mb-4"><div><span class="eyebrow">CADA OPERACIÓN, CONECTADA</span><h2>Más orden.<br />Más camino por recorrer.</h2><p>Gestioná tus vehículos, acompañá a tus clientes<br class="d-none d-md-block" /> y seguí cada compra y venta desde un mismo lugar.</p><a href="/stock" class="btn btn-lime">Explorar el stock <Icono Nombre="flecha" /></a></div><div class="banner-art" aria-hidden="true"><svg viewBox="0 0 360 220" fill="none"><path d="M28 166h305M56 154l11-42 35-5 37-45h104l44 46 29 12 8 34H56Z" stroke="currentColor" stroke-width="3" /><path d="m116 106 31-34h88l30 34H116ZM181 72v34M65 124h32M283 124h27" stroke="currentColor" stroke-width="3" /><circle cx="107" cy="153" r="23" fill="#28533c" stroke="currentColor" stroke-width="3" /><circle cx="270" cy="153" r="23" fill="#28533c" stroke="currentColor" stroke-width="3" /><circle cx="107" cy="153" r="9" stroke="currentColor" stroke-width="2" /><circle cx="270" cy="153" r="9" stroke="currentColor" stroke-width="2" /></svg><span class="art-caption">TU PRÓXIMO MOVIMIENTO EMPIEZA ACÁ</span></div></section>
+    <section aria-labelledby="accesos-title"><div class="section-heading"><h2 id="accesos-title">Tu espacio de trabajo</h2><span>Accesos rápidos</span></div><div class="row g-3">
+        @foreach (var acceso in accesos) { <div class="col-12 col-md-6 col-xl-3"><a class="quick-card" href="@acceso.Url"><span class="quick-icon"><Icono Nombre="@acceso.Icono" /></span><h3>@acceso.Titulo</h3><p>@acceso.Texto</p><span class="quick-link">Abrir módulo <Icono Nombre="flecha" Tamano="16" /></span></a></div> }
+    </div></section>
+    <section class="panel mt-4"><div class="section-heading"><h2>Últimas ventas</h2><a href="/ventas" class="small">Ver todas <Icono Nombre="flecha" Tamano="15" /></a></div><OperacionTabla Operaciones="ultimas" EsVenta="true" Eliminar="EliminarVenta" Deshabilitado="Guardando" /></section>
+}
+@code {
+    private Resumen? resumen;
+    private IReadOnlyList<OperacionFila> ultimas = [];
+    private readonly (string Titulo, string Texto, string Url, string Icono)[] accesos = [
+        ("Vehículos", "Administrá tu catálogo automotor.", "/vehiculos", "auto"),
+        ("Clientes", "Conectá con clientes y proveedores.", "/clientes", "clientes"),
+        ("Compras", "Registrá la adquisición de cada unidad.", "/compras", "compras"),
+        ("Stock", "Consultá disponibilidad y precios.", "/stock", "stock")];
+    protected override async Task CargarAsync() { resumen = await Gestion.ResumenAsync(); ultimas = (await Gestion.OperacionesAsync(true, "", 1)).Items.Take(4).ToList(); }
+    private async Task EliminarVenta(OperacionFila fila) { if (await JS.InvokeAsync<bool>("confirm", "¿Eliminar esta venta y devolver el vehículo al stock?")) await Ejecutar(() => Gestion.EliminarOperacionAsync(true, fila.Id)); }
+}

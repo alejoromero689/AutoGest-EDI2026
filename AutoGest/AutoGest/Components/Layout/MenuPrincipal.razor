@@ -1,0 +1,13 @@
+<div class="brand"><a href="/" aria-label="AutoGest, inicio"><span class="brand-mark"><Icono Tamano="24" /></span><span>Auto<span class="brand-light">Gest</span><small>GESTIÓN AUTOMOTOR</small></span></a><button type="button" class="menu-close" aria-label="Cerrar menú" @onclick="Cerrar"><Icono Nombre="cerrar" /></button></div>
+<nav aria-label="Navegación principal">
+    <div class="nav-label">ESPACIO DE TRABAJO</div>
+    <NavLink href="/" Match="NavLinkMatch.All" @onclick="Cerrar"><Icono Nombre="inicio" /><span>Inicio</span></NavLink>
+    <NavLink href="/vehiculos" @onclick="Cerrar"><Icono /><span>Vehículos</span></NavLink>
+    <NavLink href="/clientes" @onclick="Cerrar"><Icono Nombre="clientes" /><span>Clientes</span></NavLink>
+    <div class="nav-label nav-label-second">OPERACIONES</div>
+    <NavLink href="/ventas" @onclick="Cerrar"><Icono Nombre="ventas" /><span>Ventas</span></NavLink>
+    <NavLink href="/compras" @onclick="Cerrar"><Icono Nombre="compras" /><span>Compras</span></NavLink>
+    <NavLink href="/stock" @onclick="Cerrar"><Icono Nombre="stock" /><span>Stock</span></NavLink>
+</nav>
+<footer class="sidebar-footer"><span class="workspace-avatar">AG</span><div><strong>AutoGest</strong><small>Proyecto integrador · 2026</small></div><span class="connection-dot" title="Gestión automotor"></span></footer>
+@code { [Parameter] public EventCallback Cerrar { get; set; } }

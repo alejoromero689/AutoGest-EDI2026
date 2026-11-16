@@ -1,0 +1,22 @@
+@page "/clientes"
+@inherits DatosPageBase
+@inject IJSRuntime JS
+<PageTitle>Clientes · AutoGest</PageTitle>
+<PageHeader Titulo="Clientes" Descripcion="Las personas y empresas que hacen crecer tu negocio."><a class="btn btn-primary" href="/clientes/nuevo"><Icono Nombre="mas" /> Nuevo cliente</a></PageHeader>
+<section class="panel" aria-label="Listado de clientes">
+    <div class="section-heading"><h2>Clientes y proveedores</h2><span>Tu agenda comercial</span></div>
+    <Buscador @bind-Texto="texto" Buscar="Buscar" Placeholder="Buscar por nombre, DNI, CUIT o correo" Deshabilitado="Cargando" />
+    @if (Error != null) { <div class="alert alert-danger" role="alert">@Error</div> }
+    @if (Cargando) { <p role="status">Cargando clientes...</p> }
+    else { <ClienteTabla Clientes="pagina.Items" Eliminar="Eliminar" Deshabilitado="Guardando" /> }
+    <Paginacion Total="pagina.Total" Numero="pagina.Numero" Paginas="pagina.Paginas" Cambiar="Cambiar" Deshabilitado="Cargando" />
+</section>
+@code {
+    private string texto = "";
+    private int numero = 1;
+    private Pagina<Cliente> pagina = new([], 0, 1);
+    protected override async Task CargarAsync() { pagina = await Gestion.ClientesAsync(texto, numero); numero = pagina.Numero; }
+    private Task Buscar() { numero = 1; return Recargar(); }
+    private Task Cambiar(int valor) { numero = valor; return Recargar(); }
+    private async Task Eliminar(Cliente cliente) { if (await JS.InvokeAsync<bool>("confirm", $"¿Eliminar a {cliente.Nombre}?")) await Ejecutar(() => Gestion.EliminarClienteAsync(cliente.Id)); }
+}

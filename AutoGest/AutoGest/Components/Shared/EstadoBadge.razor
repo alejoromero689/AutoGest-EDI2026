@@ -1,0 +1,2 @@
+<span class="status-badge @(Vendido ? "sold" : "available")"><span></span>@(Vendido ? "Vendido" : "Disponible")</span>
+@code { [Parameter] public bool Vendido { get; set; } }

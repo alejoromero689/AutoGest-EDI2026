@@ -1,0 +1,30 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: autogest
+      MYSQL_USER: autogest
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Copiá .env.example a .env y configurá MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+  web:
+    build: .
+    ports:
+      - "5080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__GestoriaDb: Server=mysql;Database=autogest;User=autogest;Password=${MYSQL_PASSWORD}
+      Database__ApplyMigrations: "true"
+      Database__SeedDemo: "false"
+      TZ: America/Argentina/Buenos_Aires
+    depends_on:
+      mysql:
+        condition: service_healthy
+volumes:
+  mysql_data:

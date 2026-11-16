@@ -1,0 +1,14 @@
+<form class="search-form" @onsubmit="() => Buscar.InvokeAsync()" @onsubmit:preventDefault>
+    <div class="search-input"><Icono Nombre="buscar" /><input type="search" class="form-control" aria-label="@Placeholder" placeholder="@Placeholder" value="@Texto" @oninput="Cambiar" /></div>
+    <button type="submit" class="btn btn-outline-primary" disabled="@Deshabilitado">Buscar</button>
+    @ChildContent
+</form>
+@code {
+    [Parameter] public string Texto { get; set; } = "";
+    [Parameter] public EventCallback<string> TextoChanged { get; set; }
+    [Parameter] public EventCallback Buscar { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "Buscar...";
+    [Parameter] public bool Deshabilitado { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    private Task Cambiar(ChangeEventArgs e) => TextoChanged.InvokeAsync(e.Value?.ToString() ?? "");
+}

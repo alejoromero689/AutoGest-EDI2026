@@ -1,0 +1,4 @@
+.search-form { display:flex; gap:.65rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+.search-input { position:relative; flex:1 1 230px; }
+.search-input ::deep .icono { position:absolute; top:12px; left:13px; color:#82928a; }
+input { padding-left:2.7rem; }

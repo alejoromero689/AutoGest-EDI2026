@@ -1,0 +1,12 @@
+<article class="metric-card @Color">
+    <div class="metric-label">@Titulo <span class="metric-icon"><Icono Nombre="@Icono" /></span></div>
+    <div class="metric-value">@Valor</div>
+    <p>@Detalle</p>
+</article>
+@code {
+    [Parameter] public string Titulo { get; set; } = "";
+    [Parameter] public string Valor { get; set; } = "";
+    [Parameter] public string Detalle { get; set; } = "";
+    [Parameter] public string Icono { get; set; } = "auto";
+    [Parameter] public string Color { get; set; } = "";
+}

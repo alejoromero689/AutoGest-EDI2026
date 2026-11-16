@@ -1,0 +1,16 @@
+@if (Clientes.Count == 0) { <EstadoVacio Titulo="No se encontraron clientes" Icono="clientes" /> }
+else
+{
+    <div class="table-responsive"><table class="table align-middle">
+        <caption class="visually-hidden">Clientes y proveedores registrados</caption>
+        <thead><tr><th scope="col">Cliente / proveedor</th><th scope="col">DNI / CUIT</th><th scope="col">Contacto</th><th scope="col">Dirección</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+        <tbody>@foreach (var cliente in Clientes) {
+            <tr @key="cliente.Id"><td><div class="person-cell"><span class="avatar" aria-hidden="true">@cliente.Nombre[..1].ToUpperInvariant()</span><strong>@cliente.Nombre</strong></div></td><td class="font-monospace">@cliente.Documento</td><td><div>@(cliente.Email ?? "—")</div><small class="text-muted">@cliente.Telefono</small></td><td>@(cliente.Direccion ?? "—")</td><td><div class="table-actions"><a class="btn btn-light btn-sm" href="@($"/clientes/editar/{cliente.Id}")">Editar</a><button class="btn btn-outline-danger btn-sm" type="button" disabled="@Deshabilitado" @onclick="() => Eliminar.InvokeAsync(cliente)">Eliminar</button></div></td></tr>
+        }</tbody>
+    </table></div>
+}
+@code {
+    [Parameter] public IReadOnlyList<Cliente> Clientes { get; set; } = [];
+    [Parameter] public EventCallback<Cliente> Eliminar { get; set; }
+    [Parameter] public bool Deshabilitado { get; set; }
+}

@@ -1,0 +1,18 @@
+.brand { padding:2rem 1.5rem 2.6rem; display:flex; justify-content:space-between; align-items:center; }
+.brand a { display:flex; align-items:center; gap:11px; text-decoration:none; color:white; font-size:1.6rem; font-weight:750; letter-spacing:-.06em; line-height:1.1; }
+.brand-light { font-weight:400; }
+.brand small { display:block; font-size:.49rem; letter-spacing:.17em; color:#adbfaf; margin-top:6px; }
+.brand-mark { background:#c9e98a; color:#173e2f; border-radius:12px; height:42px; width:42px; display:grid; place-items:center; }
+nav { padding:0 1rem; }
+.nav-label { font-size:.57rem; letter-spacing:.15em; font-weight:700; color:#8da99b; padding:0 .85rem; margin-bottom:.9rem; }
+.nav-label-second { margin-top:2.1rem; }
+nav ::deep a { display:flex; align-items:center; gap:13px; padding:.8rem .9rem; margin:.3rem 0; color:#c0d1c6; text-decoration:none; font-size:.84rem; font-weight:500; border-radius:9px; transition:background .15s; }
+nav ::deep a:hover { background:#284c3c; color:white; }
+nav ::deep a.active { background:#c9e98a; color:#1d3829; font-weight:700; }
+.sidebar-footer { margin-top:auto; padding:1.3rem 1.2rem; display:flex; gap:.6rem; align-items:center; border-top:1px solid #355143; }
+.workspace-avatar { width:33px; height:33px; background:#3e5e4c; border-radius:50%; font-size:.65rem; display:grid; place-items:center; color:#e7f2de; }
+.sidebar-footer strong { display:block; font-size:.75rem; color:#e0e9e2; }
+.sidebar-footer small { color:#91aa9a; font-size:.58rem; }
+.connection-dot { width:6px; height:6px; border-radius:50%; background:#c9e98a; margin-left:auto; }
+.menu-close { background:transparent; color:white; border:0; padding:.4rem; }
+@media(min-width:992px) { .menu-close { display:none; } }

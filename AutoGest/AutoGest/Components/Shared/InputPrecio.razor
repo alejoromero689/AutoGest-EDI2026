@@ -1,4 +1,4 @@
-﻿@inherits InputBase<decimal>
+@inherits InputBase<decimal>
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
 @using System.Globalization
@@ -50,7 +50,7 @@
     protected override bool TryParseValueFromString(
         string? value,
         out decimal result,
-        out string? validationErrorMessage)
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(false)] out string? validationErrorMessage)
     {
         if (EsPrecioValido(value ?? "", out result))
         {

@@ -1,0 +1,12 @@
+<div class="empty-state" role="status">
+    <span class="empty-icon"><Icono Nombre="@Icono" Tamano="28" /></span>
+    <h2>@Titulo</h2><p>@Descripcion</p>
+    @if (Href != null) { <a class="btn btn-primary" href="@Href">@Accion</a> }
+</div>
+@code {
+    [Parameter] public string Titulo { get; set; } = "Todavía no hay registros";
+    [Parameter] public string Descripcion { get; set; } = "Agregá el primero para empezar o probá otra búsqueda.";
+    [Parameter] public string Icono { get; set; } = "stock";
+    [Parameter] public string? Href { get; set; }
+    [Parameter] public string Accion { get; set; } = "Agregar registro";
+}

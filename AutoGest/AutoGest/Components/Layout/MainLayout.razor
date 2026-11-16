@@ -1,17 +1,24 @@
-﻿@inherits LayoutComponentBase
-
-<div class="container py-3">
-    <nav aria-label="Navegación principal">
-
-        <a href="/vehiculos"
-           data-enhance-nav="false"
-           class="btn btn-primary">
-            Vehículos
-        </a>
-
-    </nav>
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject GestionState Estado
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+<div class="app-shell">
+    @if (menuAbierto) { <button class="menu-backdrop" aria-label="Cerrar menú" @onclick="CerrarMenu"></button> }
+    <aside id="menu-principal" class="sidebar @(menuAbierto ? "open" : "")"><MenuPrincipal Cerrar="CerrarMenu" /></aside>
+    <div class="workspace">
+        <header class="topbar"><div class="d-flex align-items-center gap-3"><button type="button" class="btn btn-light mobile-toggle" aria-label="Abrir menú" aria-controls="menu-principal" aria-expanded="@menuAbierto" @onclick="() => menuAbierto = !menuAbierto"><Icono Nombre="menu" /></button><span class="topbar-title">Tu concesionaria, en un solo lugar.</span></div><div class="topbar-right"><span class="today">@DateTime.Today.ToString("dd MMM yyyy", Formato.Cultura)</span><span class="topbar-avatar" aria-label="AutoGest">AG</span></div></header>
+        <main id="contenido" class="page-content">
+            @if (Estado.Mensaje != null) { <div class="alert alert-success d-flex justify-content-between align-items-center gap-3" role="status"><span><Icono Nombre="check" /> @Estado.Mensaje</span><button type="button" class="btn-close" aria-label="Cerrar aviso" @onclick="Estado.LimpiarMensaje"></button></div> }
+            @Body
+        </main>
+        <footer class="workspace-footer"><span>AutoGest · Gestión automotor</span><span>Hecho para organizar tu día.</span></footer>
+    </div>
 </div>
-
-<main>
-    @Body
-</main>
+<div id="blazor-error-ui" role="alert">Se interrumpió la conexión. <a href="" class="reload">Recargar la aplicación</a><a class="dismiss" role="button" aria-label="Cerrar">×</a></div>
+@code {
+    private bool menuAbierto;
+    protected override void OnInitialized() => Estado.OnChange += Cambio;
+    private void Cambio() => _ = InvokeAsync(StateHasChanged);
+    private void CerrarMenu() => menuAbierto = false;
+    public void Dispose() => Estado.OnChange -= Cambio;
+}

@@ -1,4 +1,4 @@
-﻿using AutoGest.Models;
+using AutoGest.Models;
 using Microsoft.EntityFrameworkCore;
 
 //Configura entidades, relaciones y restricciones
@@ -18,10 +18,28 @@ public class GestoriaDbContext : DbContext
 
     public DbSet<Vehiculo> Vehiculos => Set<Vehiculo>();
 
+    public DbSet<Cliente> Clientes => Set<Cliente>();
+    public DbSet<Venta> Ventas => Set<Venta>();
+    public DbSet<Compra> Compras => Set<Compra>();
+
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Cliente>().HasIndex(c => c.Documento).IsUnique();
+        modelBuilder.Entity<Venta>().HasIndex(v => v.VehiculoId).IsUnique();
+        modelBuilder.Entity<Compra>().HasIndex(c => c.VehiculoId).IsUnique();
+        modelBuilder.Entity<Venta>().Property(v => v.Importe).HasPrecision(12, 2);
+        modelBuilder.Entity<Compra>().Property(c => c.Importe).HasPrecision(12, 2);
+        modelBuilder.Entity<Venta>().HasOne(v => v.Cliente).WithMany()
+            .HasForeignKey(v => v.ClienteId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Venta>().HasOne(v => v.Vehiculo).WithMany()
+            .HasForeignKey(v => v.VehiculoId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Compra>().HasOne(c => c.Cliente).WithMany()
+            .HasForeignKey(c => c.ClienteId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Compra>().HasOne(c => c.Vehiculo).WithMany()
+            .HasForeignKey(c => c.VehiculoId).OnDelete(DeleteBehavior.Restrict);
 
         // Relación: una marca tiene muchos vehículos.
         modelBuilder.Entity<Vehiculo>()

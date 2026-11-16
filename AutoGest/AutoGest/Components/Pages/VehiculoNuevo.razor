@@ -1,4 +1,4 @@
-﻿@page "/vehiculos/nuevo"
+@page "/vehiculos/nuevo"
 @page "/vehiculos/editar/{Id:int}"
 
 @using AutoGest.Data
@@ -19,16 +19,13 @@
     @(Id.HasValue ? "Editar vehículo - AutoGest" : "Registrar vehículo - AutoGest")
 </PageTitle>
 
-<main class="container py-4">
+<div class="vehicle-page">
 
-    <header class="mb-4">
-        <h1>@(Id.HasValue ? "Editar vehículo" : "Registrar vehículo")</h1>
-        <p class="text-muted">
-            Ingresá los datos del automóvil.
-        </p>
-    </header>
+    <PageHeader Titulo="@(Id.HasValue ? "Editar vehículo" : "Nuevo vehículo")" Descripcion="Completá la información de esta unidad." Seccion="CATÁLOGO AUTOMOTOR">
+        <a href="/vehiculos" class="btn btn-light">Volver a vehículos</a>
+    </PageHeader>
 
-    <section class="card shadow-sm">
+    <section class="card form-panel">
 
         <div class="card-body">
 
@@ -62,12 +59,10 @@
                     <div class="row g-3">
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">
-                                Marca
-                            </label>
+                            <label class="form-label" for="vehiculo-marcaid">Marca</label>
 
                             <InputSelect class="form-select"
-                                         @bind-Value="vehiculo.MarcaId">
+                                         id="vehiculo-marcaid" @bind-Value="vehiculo.MarcaId">
 
                                 <option value="0">
                                     Seleccioná una marca
@@ -87,24 +82,20 @@
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">
-                                Modelo
-                            </label>
+                            <label class="form-label" for="vehiculo-modelo">Modelo</label>
 
                             <InputText class="form-control"
-                                       @bind-Value="vehiculo.Modelo" />
+                                       id="vehiculo-modelo" @bind-Value="vehiculo.Modelo" />
 
                             <ValidationMessage
                                 For="@(() => vehiculo.Modelo)" />
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">
-                                Año
-                            </label>
+                            <label class="form-label" for="vehiculo-anio">Año</label>
 
                             <InputNumber class="form-control"
-                                         @bind-Value="vehiculo.Anio" />
+                                         id="vehiculo-anio" @bind-Value="vehiculo.Anio" />
 
                             <ValidationMessage
                                 For="@(() => vehiculo.Anio)" />
@@ -133,9 +124,9 @@
 
                                 <InputCheckbox
                                     class="form-check-input"
-                                    @bind-Value="vehiculo.EsUsado" />
+                                    id="vehiculo-usado" @bind-Value="vehiculo.EsUsado" />
 
-                                <label class="form-check-label">
+                                <label class="form-check-label" for="vehiculo-usado">
                                     ¿Es un vehículo usado?
                                 </label>
 
@@ -144,24 +135,20 @@
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">
-                                Kilometraje
-                            </label>
+                            <label class="form-label" for="vehiculo-kilometraje">Kilometraje</label>
 
                             <InputNumber class="form-control"
-                                         @bind-Value="vehiculo.Kilometraje" />
+                                         id="vehiculo-kilometraje" @bind-Value="vehiculo.Kilometraje" />
 
                             <ValidationMessage
                                 For="@(() => vehiculo.Kilometraje)" />
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">
-                                Patente
-                            </label>
+                            <label class="form-label" for="vehiculo-patente">Patente</label>
 
                             <InputText class="form-control"
-                                       @bind-Value="vehiculo.Patente" />
+                                       id="vehiculo-patente" @bind-Value="vehiculo.Patente" />
 
                             <ValidationMessage
                                 For="@(() => vehiculo.Patente)" />
@@ -192,7 +179,7 @@
 
     </section>
 
-</main>
+</div>
 
 @code {
 
@@ -202,48 +189,6 @@
 
 
     private Vehiculo vehiculo = new();
-
-    private readonly CultureInfo culturaArgentina =
-        CultureInfo.GetCultureInfo("es-AR");
-
-    private string precioTexto = "0,00";
-
-    private string PrecioTexto
-    {
-        get => precioTexto;
-
-        set
-        {
-            precioTexto = value;
-
-            if (decimal.TryParse(value,
-                NumberStyles.Number,
-                culturaArgentina,
-                out decimal precio))
-            {
-                vehiculo.Precio = precio;
-            }
-            else
-            {
-                vehiculo.Precio = 0m;
-            }
-        }
-    }
-
-    private void FormatearPrecio()
-    {
-        if (decimal.TryParse(precioTexto,
-            NumberStyles.Number,
-            culturaArgentina,
-            out decimal precio))
-        {
-            vehiculo.Precio = precio;
-
-            precioTexto = precio.ToString(
-                "N2", culturaArgentina);
-        }
-    }
-
 
     private List<Marca> marcas = new();
 
@@ -289,8 +234,6 @@
                 vehiculo = new Vehiculo();
             }
 
-            precioTexto = vehiculo.Precio.ToString(
-                "N2", culturaArgentina);
         }
         catch
         {
@@ -380,7 +323,7 @@
 
             await db.SaveChangesAsync();
 
-            VehiculosState.NotificarCambio();
+            VehiculosState.NotificarCambio("Vehículo guardado correctamente.");
 
             Navigation.NavigateTo("/vehiculos");
 

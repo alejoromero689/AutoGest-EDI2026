@@ -1,0 +1,72 @@
+name: Build, test y deploy
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+          MYSQL_DATABASE: autogest_ci_test
+          MYSQL_USER: autogest
+          MYSQL_PASSWORD: ci-test-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=15
+    env:
+      AUTOGEST_TEST_CONNECTION_STRING: Server=127.0.0.1;Port=3306;Database=autogest_ci_test;User=autogest;Password=ci-test-password
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet tool restore
+      - run: dotnet restore AutoGest/AutoGest.sln
+      - run: dotnet build AutoGest/AutoGest.sln -c Release --no-restore --warnaserror
+      - name: Verificar que el modelo tenga su migración
+        run: dotnet ef migrations has-pending-model-changes --project AutoGest/AutoGest --no-build --configuration Release
+      - run: dotnet test AutoGest/AutoGest.sln -c Release --no-build --logger trx --results-directory TestResults
+      - run: dotnet publish AutoGest/AutoGest/AutoGest.csproj -c Release --no-build -o publish
+      - uses: actions/upload-artifact@v4
+        with:
+          name: autogest-web
+          path: publish
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: resultados-tests
+          path: TestResults
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.AZURE_WEBAPP_NAME != ''
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.webapp-url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: autogest-web
+          path: publish
+      - name: Publicar en Azure App Service
+        id: deploy
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: publish

@@ -1,0 +1,17 @@
+@if (Operaciones.Count == 0) { <EstadoVacio Titulo="No se encontraron operaciones" Icono="@(EsVenta ? "ventas" : "compras")" /> }
+else
+{
+    <div class="table-responsive"><table class="table align-middle">
+        <caption class="visually-hidden">@(EsVenta ? "Ventas registradas" : "Compras registradas")</caption>
+        <thead><tr><th scope="col">Operación</th><th scope="col">Vehículo</th><th scope="col">@(EsVenta ? "Cliente" : "Proveedor")</th><th scope="col">Fecha</th><th scope="col" class="text-end">Importe</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+        <tbody>@foreach (var item in Operaciones) {
+            <tr @key="item.Id"><td class="font-monospace text-muted">@(EsVenta ? "VTA" : "CMP")-@item.Id.ToString("D4")</td><td><strong>@item.Vehiculo</strong><div class="small text-muted">@(item.Patente ?? "Sin patente")</div></td><td>@item.Cliente</td><td class="text-nowrap">@item.Fecha.ToString("dd/MM/yyyy")</td><td class="text-end text-nowrap fw-semibold">@item.Importe.ToString("C2", Formato.Cultura)</td><td><div class="table-actions"><a class="btn btn-light btn-sm" href="@($"/{(EsVenta ? "ventas" : "compras")}/editar/{item.Id}")">Editar</a><button class="btn btn-outline-danger btn-sm" type="button" disabled="@Deshabilitado" @onclick="() => Eliminar.InvokeAsync(item)">Eliminar</button></div></td></tr>
+        }</tbody>
+    </table></div>
+}
+@code {
+    [Parameter] public bool EsVenta { get; set; }
+    [Parameter] public IReadOnlyList<OperacionFila> Operaciones { get; set; } = [];
+    [Parameter] public EventCallback<OperacionFila> Eliminar { get; set; }
+    [Parameter] public bool Deshabilitado { get; set; }
+}

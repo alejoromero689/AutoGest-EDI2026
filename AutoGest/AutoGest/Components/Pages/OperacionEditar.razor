@@ -1,0 +1,51 @@
+@page "/ventas/nueva"
+@page "/ventas/editar/{Id:int}"
+@page "/compras/nueva"
+@page "/compras/editar/{Id:int}"
+@inherits DatosPageBase
+@inject NavigationManager Navigation
+<PageTitle>@Titulo · AutoGest</PageTitle>
+<PageHeader Titulo="@Titulo" Descripcion="@(EsVenta ? "Elegí un vehículo disponible y completá los datos de la venta." : "Asociá un proveedor y registrá el costo de adquisición.")" Seccion="REGISTRO DE OPERACIONES"><a href="@($"/{Ruta}")" class="btn btn-light">Volver a @Ruta</a></PageHeader>
+@if (Error != null) { <div class="alert alert-danger" role="alert">@Error</div> }
+@if (Cargando) { <p role="status">Cargando datos...</p> }
+else if (form != null)
+{
+    @if (clientes.Count == 0 || vehiculos.Count == 0)
+    {
+        <section class="panel"><EstadoVacio Titulo="Faltan datos para registrar la operación" Descripcion="Necesitás al menos un contacto y un vehículo elegible. Las compras solo admiten unidades disponibles sin compra registrada." />
+        <div class="d-flex gap-2 justify-content-center flex-wrap"><a href="/clientes/nuevo" class="btn btn-primary">Crear cliente / proveedor</a><a href="/vehiculos/nuevo" class="btn btn-light">Registrar vehículo</a></div></section>
+    }
+    else
+    {
+        <section class="panel form-panel" aria-label="Datos de la operación">
+        <div class="section-heading"><h2>Datos de la operación</h2><span>* Campos obligatorios</span></div>
+        <EditForm Model="form" OnValidSubmit="Guardar" FormName="Operacion" @key="form"><DataAnnotationsValidator /><ValidationSummary class="text-danger" />
+        <fieldset disabled="@Guardando"><div class="row g-3">
+            <div class="col-12"><label class="form-label" for="op-vehiculo">Vehículo *</label><InputSelect id="op-vehiculo" class="form-select" @bind-Value="form.VehiculoId" disabled="@Id.HasValue"><option value="0">Seleccioná un vehículo</option>@foreach (var v in vehiculos) { <option value="@v.Id">#@v.Id · @v.Marca?.Nombre @v.Modelo · @(v.Patente ?? "Sin patente") · @v.Anio</option> }</InputSelect><ValidationMessage For="@(() => form.VehiculoId)" /><div class="form-text">@(Id.HasValue ? "El vehículo de una operación registrada no se puede cambiar." : "Cada registro del catálogo representa una unidad física.")</div></div>
+            <div class="col-12"><label class="form-label" for="op-cliente">@(EsVenta ? "Cliente" : "Proveedor") *</label><InputSelect id="op-cliente" class="form-select" @bind-Value="form.ClienteId"><option value="0">Seleccioná un contacto</option>@foreach (var c in clientes) { <option value="@c.Id">@c.Nombre · @c.Documento</option> }</InputSelect><ValidationMessage For="@(() => form.ClienteId)" /><div class="form-text">Los proveedores se registran en el módulo Clientes.</div></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="op-fecha">Fecha *</label><InputDate id="op-fecha" class="form-control" @bind-Value="form.Fecha" min="2000-01-01" max="@DateTime.Today.ToString("yyyy-MM-dd")" /><ValidationMessage For="@(() => form.Fecha)" /></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="op-importe">Importe en pesos (ARS) *</label><InputPrecio id="op-importe" class="form-control" @bind-Value="form.Importe" /><ValidationMessage For="@(() => form.Importe)" /><div class="form-text">Ejemplo: 12.500.000,00</div></div>
+            <div class="col-12"><label class="form-label" for="op-notas">Observaciones</label><InputTextArea id="op-notas" class="form-control" @bind-Value="form.Observaciones" maxlength="500" rows="3" /><ValidationMessage For="@(() => form.Observaciones)" /></div>
+        </div><div class="form-note"><Icono Nombre="stock" /> @(EsVenta ? "Al guardar, el vehículo dejará de figurar como disponible." : "La compra registra el costo de la unidad. No duplica el vehículo ni su cantidad en stock.")</div>
+        <div class="form-actions"><button class="btn btn-primary" type="submit">@(Guardando ? "Guardando..." : "Guardar " + (EsVenta ? "venta" : "compra"))</button><a href="@($"/{Ruta}")" class="btn btn-light">Cancelar</a></div></fieldset></EditForm></section>
+    }
+}
+@code {
+    [Parameter] public int? Id { get; set; }
+    [SupplyParameterFromQuery(Name = "vehiculo")] public int? VehiculoId { get; set; }
+    protected override bool Reactivo => false;
+    private bool EsVenta => new Uri(Navigation.Uri).AbsolutePath.StartsWith("/ventas", StringComparison.OrdinalIgnoreCase);
+    private string Ruta => EsVenta ? "ventas" : "compras";
+    private string Titulo => (Id.HasValue ? "Editar " : "Nueva ") + (EsVenta ? "venta" : "compra");
+    private OperacionForm? form;
+    private List<Cliente> clientes = [];
+    private List<Vehiculo> vehiculos = [];
+    protected override async Task CargarAsync()
+    {
+        form = Id.HasValue ? await Gestion.OperacionAsync(EsVenta, Id.Value) : new OperacionForm();
+        if (form == null) { Error = "La operación no existe."; return; }
+        (clientes, vehiculos) = await Gestion.OpcionesAsync(EsVenta, Id.HasValue ? form.VehiculoId : null);
+        if (!Id.HasValue && VehiculoId.HasValue && vehiculos.Any(v => v.Id == VehiculoId)) form.VehiculoId = VehiculoId.Value;
+    }
+    private Task Guardar() => Ejecutar(async () => { await Gestion.GuardarOperacionAsync(EsVenta, form!); Navigation.NavigateTo($"/{Ruta}"); });
+}

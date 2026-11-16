@@ -1,4 +1,4 @@
-﻿
+
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoGest.Models;
@@ -13,4 +13,3 @@ public class Marca
 
     public List<Vehiculo> Vehiculos { get; set; } = new();
 }
-

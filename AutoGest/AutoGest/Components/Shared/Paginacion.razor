@@ -1,0 +1,15 @@
+<footer class="pagination-footer">
+    <span class="text-muted small">@Total @(Total == 1 ? "registro" : "registros")</span>
+    <nav aria-label="Paginación de resultados" class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-light btn-sm" disabled="@(Numero <= 1 || Deshabilitado)" @onclick="() => Cambiar.InvokeAsync(Numero - 1)">Anterior</button>
+        <span class="small">@Numero / @Paginas</span>
+        <button type="button" class="btn btn-light btn-sm" disabled="@(Numero >= Paginas || Deshabilitado)" @onclick="() => Cambiar.InvokeAsync(Numero + 1)">Siguiente</button>
+    </nav>
+</footer>
+@code {
+    [Parameter] public int Total { get; set; }
+    [Parameter] public int Numero { get; set; } = 1;
+    [Parameter] public int Paginas { get; set; } = 1;
+    [Parameter] public bool Deshabilitado { get; set; }
+    [Parameter] public EventCallback<int> Cambiar { get; set; }
+}

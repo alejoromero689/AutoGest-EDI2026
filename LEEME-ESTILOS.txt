@@ -1,0 +1,14 @@
+CORRECCIÓN DE ESTILOS DE AUTOGEST
+
+1. Cerrá Visual Studio.
+2. Extraé este ZIP DENTRO de AutoGest-EDI2026-recuperado, la carpeta que contiene AutoGest y .github. Aceptá reemplazar los archivos.
+3. El resultado debe incluir: AutoGest-EDI2026-recuperado/AutoGest/AutoGest/wwwroot/app.css y Components/Layout/MainLayout.razor.css dentro del mismo proyecto.
+4. Borrá únicamente bin y obj de AutoGest/AutoGest para regenerar los archivos compilados.
+5. Abrí AutoGest/AutoGest.sln desde la carpeta recuperada. Recompilá y ejecutá.
+6. Recargá el navegador con Ctrl+F5.
+
+Este ZIP solo reemplaza seis hojas CSS y agrega sus fuentes y licencia. No incluye .git, global.json, modelos, migraciones ni configuración MySQL.
+
+Si sigue igual, en Visual Studio verificá que MainLayout.razor.css contenga .sidebar y que app.css contenga .welcome-banner. Si esos estilos están en los archivos pero no en las direcciones /app.css y /AutoGest.styles.css del navegador, verificá que estés ejecutando la solución recuperada y que no haya otra instancia de AutoGest abierta.
+
+Los nombres de las propiedades CSS se conservan en inglés. Evitá copiar código desde una pestaña que el navegador haya traducido automáticamente.
